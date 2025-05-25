@@ -1,0 +1,44 @@
+#include <windows.h>
+#include <iostream>
+
+// Déclaration des types de fonctions exportées par la DLL
+typedef void(*ShowMenuFunc)();
+typedef void(*AimAssistFunc)();
+typedef void(*StartAutoClickFunc)();
+typedef void(*StopAutoClickFunc)();
+
+int main() {
+    // Chargement de la DLL
+    HINSTANCE hLib = LoadLibrary(L"Path\\To\\AimAssistWithMenu.dll");
+    if (!hLib) {
+        std::cerr << "Erreur : Impossible de charger la DLL." << std::endl;
+        return 1;
+    }
+
+    // Récupération des adresses des fonctions exportées
+    ShowMenuFunc ShowMenu = (ShowMenuFunc)GetProcAddress(hLib, "ShowMenu");
+    AimAssistFunc AimAssist = (AimAssistFunc)GetProcAddress(hLib, "AimAssist");
+    StartAutoClickFunc StartAutoClick = (StartAutoClickFunc)GetProcAddress(hLib, "StartAutoClick");
+    StopAutoClickFunc StopAutoClick = (StopAutoClickFunc)GetProcAddress(hLib, "StopAutoClick");
+
+    if (!ShowMenu || !AimAssist || !StartAutoClick || !StopAutoClick) {
+        std::cerr << "Erreur : Impossible de trouver les fonctions dans la DLL." << std::endl;
+        FreeLibrary(hLib);
+        return 1;
+    }
+
+    // Affichage du menu
+    ShowMenu();
+
+    // Boucle principale pour garder le menu ouvert et réactif
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    // Libération de la DLL
+    FreeLibrary(hLib);
+
+    return 0;
+}
